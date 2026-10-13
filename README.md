@@ -23,7 +23,7 @@ Un bot robusto para leer comentarios en Live de TikTok con voz humana.
    USUARIO = "tu_usuario_sin_@" # TU USUARIO SIN EL @
    
 4. Cambia el nombre de VIP_USERS en la linea 59 del archivo `parzival_bot.py`
-   VIP_USERS = {"USUARIO_1", "USUARIO_2"}   # USUARIOS SIN @ set → búsqueda O(1)
+   VIP_USERS = {"usuario_vip1", "usuario_vip2"}   # USUARIOS SIN @ set → búsqueda O(1)
    
 5. Ejecuta el bot con el siguiente comando:
    python parzival_bot.py
