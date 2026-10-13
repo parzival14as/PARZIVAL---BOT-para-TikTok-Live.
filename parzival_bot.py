@@ -55,8 +55,8 @@ threading.Thread(target=worker_voz, daemon=True).start()
 # =========================
 # ⚙️ CONFIGURACIÓN TIKTOK
 # =========================
-USUARIO = "TU_USUARIO_SIN_@" # TU USUARIO SIN EL @
-VIP_USERS = {"USUARIO_1", "USUARIO_2"}   # USUARIOS SIN @ set → búsqueda O(1)
+USUARIO = "usuario" # TU USUARIO SIN EL @
+VIP_USERS = {"usuario_vip1", "usuario_vip2"}   # USUARIOS SIN @ set → búsqueda O(1)
 cooldowns: dict[str, float] = {}
 COOLDOWN_SEGUNDOS = 3
 
@@ -71,15 +71,47 @@ def puede_hablar(usuario: str) -> bool:
         return True
     return False
 
+
+# ======
+# OBTENER USUARIO 
+# ======
+
+def obtener_usuario(user):
+    """Devuelve (unique_id, nickname) probando los nombres que usan distintas versiones."""
+    unique = None
+    for attr in ("unique_id", "display_id", "username", "user_name", "uniqueId"):
+        val = getattr(user, attr, None)
+        if val:
+            unique = str(val)
+            break
+
+    nick = None
+    for attr in ("nickname", "nick_name", "nickName", "display_name"):
+        val = getattr(user, attr, None)
+        if val:
+            nick = str(val)
+            break
+
+    unique = unique or "desconocido"
+    nick = nick or unique
+    return unique, nick
+
+_debug_mostrado = False
+
 # =========================
 # 💬 EVENTOS
 # =========================
 @client.on(CommentEvent)
 async def on_comment(event: CommentEvent):
+    global _debug_mostrado
     try:
-        usuario_unique = event.user.unique_id
-        usuario_nick   = event.user.nickname or usuario_unique
-        mensaje        = event.comment.strip()
+        if not _debug_mostrado:
+            _debug_mostrado = True
+            attrs = [a for a in dir(event.user) if not a.startswith("_")]
+            print(f"🔍 Atributos de User: {attrs}")
+
+        usuario_unique, usuario_nick = obtener_usuario(event.user)
+        mensaje = event.comment.strip()
 
         if not mensaje:
             return
@@ -95,7 +127,6 @@ async def on_comment(event: CommentEvent):
             if es_vip:
                 cola_mensajes.appendleft(texto_final)   # VIP → frente de cola
             else:
-                # ✅ FIX: evita que la cola crezca sin límite si hay spam
                 if len(cola_mensajes) < 30:
                     cola_mensajes.append(texto_final)
                 else:
@@ -128,3 +159,4 @@ if __name__ == "__main__":
             print(f"❌ Error fatal: {e}")
             print("🔄 Reintentando en 10 segundos...")
             time.sleep(10)
+
